@@ -70,6 +70,7 @@ class StatSwingApp(QMainWindow):
             self.season_slider.setRange(0, 0)
             self.season_slider.setValue(0, 0)
             self.season_slider.setEnabled(False)
+            self.season_slider_label
             return
         
         player_data = self.data[self.data['Name'] == player_name]
