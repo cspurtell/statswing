@@ -70,7 +70,7 @@ class StatSwingApp(QMainWindow):
             self.season_slider.setRange(0, 0)
             self.season_slider.setValue(0, 0)
             self.season_slider.setEnabled(False)
-            self.season_slider_label
+            self.season_slider_label.setText('Range: -')
             return
         
         player_data = self.data[self.data['Name'] == player_name]
@@ -79,6 +79,7 @@ class StatSwingApp(QMainWindow):
             self.season_slider.setRange(0, 0)
             self.season_slider.setValue(0, 0)
             self.season_slider.setEnabled(False)
+            self.season_slider_label.setText('Range: -')
             return
     
         active_seasons = sorted(player_data['Season Year'].unique())
@@ -88,6 +89,7 @@ class StatSwingApp(QMainWindow):
         self.season_slider.setRange(min_year, max_year)
         self.season_slider.setValue((min_year, max_year))
         self.season_slider.setEnabled(True)
+        self.season_slider_label.setText(f'Range: {min_year} - {max_year}')
 
     def update_player_table(self):
         player_name = self.player_dropdown.currentText()
