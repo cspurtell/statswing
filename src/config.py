@@ -30,3 +30,26 @@ TEAM_NAME_MAPPING = {
     'CHW': 'Chicago White Sox',
     'WSN': 'Washington Nationals'
 }
+
+STAT_MAPPING = {
+    'G': 'Games Played',
+    'PA': 'Plate Appearances',
+    'HR': 'Home Runs',
+    'R': 'Runs',
+    'RBI': 'RBI',
+    'SB': 'Stolen Bases',
+    'BB%': 'Walk Percentage',
+    'K%': 'Strikeout Percentage',
+    'ISO': 'Isolated Power',
+    'BABIP': 'Batting Average on Balls in Play',
+    'AVG': 'Batting Average',
+    'OBP': 'On-Base Percentage',
+    'SLG': 'Slugging Percentage',
+    'wOBA': 'Weighted On-Base Average',
+    'xwOBA': 'Expected Weighted On-Base Average',
+    'wRC+': 'Weighted Runs Created Plus'
+    'BsR': 'Base Running'
+    'Off': 'Offense',
+    'Def': 'Defense',
+    'WAR': 'Wins Above Replacement'
+}
