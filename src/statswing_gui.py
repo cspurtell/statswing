@@ -1,8 +1,9 @@
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QHeaderView,
     QLabel, QComboBox, QMessageBox, QTableWidget, QTableWidgetItem, QAbstractItemView
 )
-from qt_material import QRangeSlider
+from qtrangeslider import QRangeSlider
 from config import TEAM_NAME_MAPPING, STAT_MAPPING
 
 class StatSwingApp(QMainWindow):
@@ -38,7 +39,7 @@ class StatSwingApp(QMainWindow):
         self.season_slider_label = QLabel('Range: -')
         self.season_slider.setOrientation(Qt.Horizontal)
         self.season_slider.setRange(0, 0) #Placeholder values until years are determined
-        self.season_slider.setValue(0, 0) #Same
+        self.season_slider.setValue((0, 0)) #Same
         self.season_slider.rangeChanged.connect(self.update_player_table)
 
         self.player_stats_table = QTableWidget()
