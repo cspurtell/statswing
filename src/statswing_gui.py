@@ -301,7 +301,8 @@ class StatSwingApp(QMainWindow):
             axes[1, 1].set_xticklabels(percentage_stats, rotation=30, ha='right')
 
             # Add a single legend for the entire figure
-            self.figure.legend(loc='upper right', fontsize=10)
+            handles, labels = axes[0, 0].get_legend_handles_labels()
+            self.figure.legend(handles, labels, loc='upper right', fontsize=10)
 
             # Adjust layout
             self.figure.subplots_adjust(hspace=0.5, wspace=0.4)
