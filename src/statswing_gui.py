@@ -84,19 +84,19 @@ class StatSwingApp(QMainWindow):
 
     def update_player_table(self):
         player_name = self.player_dropdown.currentText()
-        if not player_name:
+        start_season = self.start_season_dropdown.currentText()
+        end_season = self.end_season_dropdown.currentText()
+        if not player_name or not start_season or not end_season:
             self.player_stats_table.clear()
             self.player_stats_table.setRowCount(0)
             self.player_stats_table.setColumnCount(0)
             self.player_stats_table.setHorizontalHeaderLabels([])
             return
         
-        start_year, end_year = self.season_slider.value()
-        
         filtered_data = self.data[
             (self.data['Name'] == player_name) &
-            (self.data['Season Year'] >= int(start_year)) &
-            (self.data['Season Year'] <= int(end_year))
+            (self.data['Season Year'] >= int(start_season)) &
+            (self.data['Season Year'] <= int(end_season))
         ]
 
         if filtered_data.empty:
