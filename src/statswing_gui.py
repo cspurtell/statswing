@@ -31,6 +31,11 @@ class StatSwingApp(QMainWindow):
         self.update_player_dropdown('All Teams')
         self.player_dropdown.currentTextChanged.connect(self.update_player_table)
 
+        #Season selection dropdowns
+
+
+
+
         self.player_stats_table = QTableWidget()
 
         layout.addWidget(QLabel('Select Team:'))
@@ -85,10 +90,6 @@ class StatSwingApp(QMainWindow):
         self.player_stats_table.resizeRowsToContents()
         self.player_stats_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.player_stats_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-
-    def update_player_stats(self, player_name): #Old, can be removed soon
-        player_data = self.data[self.data['Name'] == player_name]
-        self.populate_table(self.player_stats_table, player_data)
 
     def create_compare_tab(self):
         tab = QWidget()
@@ -154,15 +155,6 @@ class StatSwingApp(QMainWindow):
         player2_data = self.data[self.data['Name'] == player2]
         
         self.display_comparison(player1_data, player2_data)
-    
-    def populate_table(self, table, player_data):
-        table.clear()
-        table.setColumnCount(len(player_data.columns))
-        table.setRowCount(len(player_data))
-        table.setHorizontalHeaderLabels(player_data.columns)
-        for row_idx, row in player_data.iterrows():
-            for col_idx, val in enumerate(row):
-                table.setItem(row_idx, col_idx, QTableWidgetItem(str(val)))
 
     def display_comparison(self, player1_data, player2_data):
         if player1_data.empty or player2_data.empty:
