@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QHeaderView,
     QLabel, QComboBox, QMessageBox, QTableWidget, QTableWidgetItem, QAbstractItemView
 )
+from qt_material import QRangeSlider
 from config import TEAM_NAME_MAPPING, STAT_MAPPING
 
 class StatSwingApp(QMainWindow):
@@ -30,15 +31,15 @@ class StatSwingApp(QMainWindow):
         self.player_dropdown = QComboBox()
         self.update_player_dropdown('All Teams')
         self.player_dropdown.currentTextChanged.connect(self.update_player_table)
+        self.player_dropdown.currentTextChanged.connect(self.update_season_slider)
 
-        #Season selection dropdowns
-        self.start_season_dropdown = QComboBox()
-        self.end_season_dropdown = QComboBox()
-        seasons = sorted(self.data['Season Year'].unique())
-        self.start_season_dropdown.addItems(map(str, seasons))
-        self.end_season_dropdown.addItems(map(str, seasons))
-        self.start_season_dropdown.currentTextChanged.connect(self.update_player_table)
-        self.end_season_dropdown.currentTextChanged.connect(self.update_player_table)
+        #Season selection slider
+        self.season_slider = QRangeSlider()
+        self.season_slider_label = QLabel('Range: -')
+        self.season_slider.setOrientation(Qt.Horizontal)
+        self.season_slider.setRange(0, 0) #Placeholder values until years are determined
+        self.season_slider.setValue(0, 0) #Same
+        self.season_slider.rangeChanged.connect(self.update_player_table)
 
         self.player_stats_table = QTableWidget()
 
@@ -46,10 +47,9 @@ class StatSwingApp(QMainWindow):
         layout.addWidget(self.team_dropdown)
         layout.addWidget(QLabel('Select Player:'))
         layout.addWidget(self.player_dropdown)
-        layout.addWidget(QLabel('Start Season:'))
-        layout.addWidget(self.start_season_dropdown)
-        layout.addWidget(QLabel('End Season:'))
-        layout.addWidget(self.end_season_dropdown)
+        layout.addWidget(QLabel('Select Season(s):'))
+        layout.addWidget(self.season_slider)
+        layout.addWidget(self.season_slider_label)
         layout.addWidget(self.player_stats_table)
 
         tab.setLayout(layout)
@@ -64,39 +64,45 @@ class StatSwingApp(QMainWindow):
         self.player_dropdown.clear()
         self.player_dropdown.addItems(filtered_data['Name'].unique())
 
-    def update_season_dropdowns(self):
+    def update_season_slider(self):
         player_name = self.player_dropdown.currentText()
         if not player_name:
-            self.start_season_dropdown.clear()
-            self.end_season_dropdown.clear()
+            self.season_slider.setRange(0, 0)
+            self.season_slider.setValue(0, 0)
+            self.season_slider.setEnabled(False)
             return
-
-        player_data = self.data[self.data['Name'] == player_name]
-        if player_data.empty:
-            self.start_season_dropdown.clear()
-            self.end_season_dropdown.clear()
         
+        player_data = self.data[self.data['Name'] == player_name]
+
+        if player_data.empty:
+            self.season_slider.setRange(0, 0)
+            self.season_slider.setValue(0, 0)
+            self.season_slider.setEnabled(False)
+            return
+    
         active_seasons = sorted(player_data['Season Year'].unique())
-        self.start_season_dropdown.clear()
-        self.end_season_dropdown.clear()
-        self.start_season_dropdown.addItems(map(str, active_seasons))
-        self.end_season_dropdown.addItems(map(str, active_seasons))
+        min_year = active_seasons[0]
+        max_year = active_seasons[-1]
+
+        self.season_slider.setRange(min_year, max_year)
+        self.season_slider.setValue((min_year, max_year))
+        self.season_slider.setEnabled(True)
 
     def update_player_table(self):
         player_name = self.player_dropdown.currentText()
-        start_season = self.start_season_dropdown.currentText()
-        end_season = self.end_season_dropdown.currentText()
-        if not player_name or not start_season or not end_season:
+        if not player_name:
             self.player_stats_table.clear()
             self.player_stats_table.setRowCount(0)
             self.player_stats_table.setColumnCount(0)
             self.player_stats_table.setHorizontalHeaderLabels([])
             return
         
+        start_year, end_year = self.season_slider.value()
+        
         filtered_data = self.data[
             (self.data['Name'] == player_name) &
-            (self.data['Season Year'] >= int(start_season)) &
-            (self.data['Season Year'] <= int(end_season))
+            (self.data['Season Year'] >= int(start_year)) &
+            (self.data['Season Year'] <= int(end_year))
         ]
 
         if filtered_data.empty:
