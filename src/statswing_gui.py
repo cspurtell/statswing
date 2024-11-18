@@ -1,8 +1,8 @@
 from PyQt5.QtWidgets import (
-    QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QComboBox, QTableWidget, QTableWidgetItem
+    QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QHeaderView,
+    QLabel, QComboBox, QMessageBox, QTableWidget, QTableWidgetItem, QAbstractItemView
 )
-from config import TEAM_NAME_MAPPING
+from config import TEAM_NAME_MAPPING, STAT_MAPPING
 
 class StatSwingApp(QMainWindow):
     def __init__(self, data):
@@ -29,7 +29,7 @@ class StatSwingApp(QMainWindow):
         #Player selection dropdown
         self.player_dropdown = QComboBox()
         self.update_player_dropdown('All Teams')
-        self.player_dropdown.currentTextChanged.connect(self.update_player_stats)
+        self.player_dropdown.currentTextChanged.connect(self.update_player_table)
 
         self.player_stats_table = QTableWidget()
 
@@ -50,8 +50,43 @@ class StatSwingApp(QMainWindow):
             filtered_data = self.data[self.data['Team'] == team_abbr]
         self.player_dropdown.clear()
         self.player_dropdown.addItems(filtered_data['Name'].unique())
-    
-    def update_player_stats(self, player_name):
+
+    def update_player_table(self):
+        player_name = self.player_dropdown.currentText()
+        if not player_name:
+            self.player_stats_table.clear()
+            self.player_stats_table.setRowCount(0)
+            self.player_stats_table.setColumnCount(0)
+            self.player_stats_table.setHorizontalHeaderLabels([])
+            return
+        
+        player_data = self.data[self.data['Name'] == player_name]
+        if player_data.empty:
+            QMessageBox.warning(self, 'Error', f'No data found for player {player_name}')
+            return
+        
+        player_row = player_data.iloc[0]
+        stats = [
+            (STAT_MAPPING.get(col, col), player_row[col])
+            for col in player_row.index
+            if col in STAT_MAPPING
+        ]
+        
+        self.player_stats_table.clear()
+        self.player_stats_table.setRowCount(len(stats))
+        self.player_stats_table.setColumnCount(2) #Stat name and value
+        self.player_stats_table.setHorizontalHeaderLabels(['Statistic', 'Value'])
+
+        for row, (stat_name, value)in enumerate(stats):
+            self.player_stats_table.setItem(row, 0, QTableWidgetItem(stat_name))
+            self.player_stats_table.setItem(row, 1, QTableWidgetItem(str(value)))
+
+        self.player_stats_table.resizeColumnsToContents()
+        self.player_stats_table.resizeRowsToContents()
+        self.player_stats_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.player_stats_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+    def update_player_stats(self, player_name): #Old, can be removed soon
         player_data = self.data[self.data['Name'] == player_name]
         self.populate_table(self.player_stats_table, player_data)
 

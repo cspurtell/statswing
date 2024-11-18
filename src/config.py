@@ -47,8 +47,8 @@ STAT_MAPPING = {
     'SLG': 'Slugging Percentage',
     'wOBA': 'Weighted On-Base Average',
     'xwOBA': 'Expected Weighted On-Base Average',
-    'wRC+': 'Weighted Runs Created Plus'
-    'BsR': 'Base Running'
+    'wRC+': 'Weighted Runs Created Plus',
+    'BsR': 'Base Running',
     'Off': 'Offense',
     'Def': 'Defense',
     'WAR': 'Wins Above Replacement'
