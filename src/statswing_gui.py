@@ -115,9 +115,8 @@ class StatSwingApp(QMainWindow):
         player1 = self.player1_dropdown.currentText()
         player2 = self.player2_dropdown.currentText()
 
-        if player1 and player2:
-            player1_data = self.data[self.data['Name'] == player1]
-            player2_data = self.data[self.data['Name'] == player2]
+        player1_data = self.data[self.data['Name'] == player1]
+        player2_data = self.data[self.data['Name'] == player2]
         
         self.display_comparison(player1_data, player2_data)
     
@@ -138,7 +137,7 @@ class StatSwingApp(QMainWindow):
             self.comparison_table.setHorizontalHeaderLabels([])
             return
         
-        stats_columns = ['Stat 1', 'Stat 2', 'Stat 3', 'Stat 4'] #Need to fill this in with names for stats in data
+        stats_columns = ['G', 'PA', 'HR', 'R'] #Need to fill this in with names for stats in data
         player1_stats = player1_data.iloc[0][stats_columns]
         player2_stats = player2_data.iloc[0][stats_columns]
 
