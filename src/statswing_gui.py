@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import (
     QLabel, QComboBox, QMessageBox, QTableWidget, QTableWidgetItem, QAbstractItemView
 )
 from src.config import TEAM_NAME_MAPPING, STAT_MAPPING
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 class StatSwingApp(QMainWindow):
     def __init__(self, data):
@@ -132,7 +134,7 @@ class StatSwingApp(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout()
 
-        #Team dropdowns for P1 and P2
+        # Team dropdowns for P1 and P2
         self.team1_dropdown = QComboBox()
         self.team1_dropdown.addItems(['All Teams'] + [TEAM_NAME_MAPPING.get(team, team) for team in sorted(self.data['Team'].unique())])
         self.team1_dropdown.currentTextChanged.connect(self.update_player1_dropdown)
@@ -141,17 +143,20 @@ class StatSwingApp(QMainWindow):
         self.team2_dropdown.addItems(['All Teams'] + [TEAM_NAME_MAPPING.get(team, team) for team in sorted(self.data['Team'].unique())])
         self.team2_dropdown.currentTextChanged.connect(self.update_player2_dropdown)
 
-        #Player dropdowns for P1 and P2
+        # Player dropdowns for P1 and P2
         self.player1_dropdown = QComboBox()
         self.update_player1_dropdown('All Teams')
-        self.player1_dropdown.currentTextChanged.connect(self.update_comparison_table)
+        self.player1_dropdown.currentTextChanged.connect(self.update_bar_graph)
 
         self.player2_dropdown = QComboBox()
         self.update_player2_dropdown('All Teams')
-        self.player2_dropdown.currentTextChanged.connect(self.update_comparison_table)
+        self.player2_dropdown.currentTextChanged.connect(self.update_bar_graph)
 
-        self.comparison_table = QTableWidget()
+        # Initialize Matplotlib figure and canvas
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
 
+        # Add widgets to the layout
         layout.addWidget(QLabel('Team 1:'))
         layout.addWidget(self.team1_dropdown)
         layout.addWidget(QLabel('Player 1:'))
@@ -162,7 +167,9 @@ class StatSwingApp(QMainWindow):
         layout.addWidget(QLabel('Player 2:'))
         layout.addWidget(self.player2_dropdown)
 
-        layout.addWidget(self.comparison_table)
+        # Add Matplotlib canvas
+        layout.addWidget(self.canvas)
+
         tab.setLayout(layout)
         return tab
     
@@ -217,4 +224,90 @@ class StatSwingApp(QMainWindow):
         
         self.comparison_table.resizeColumnsToContents()
         self.comparison_table.resizeRowsToContents()
-    
+
+
+    def update_bar_graph(self):
+        try:
+            # Get selected players
+            player1_name = self.player1_dropdown.currentText()
+            player2_name = self.player2_dropdown.currentText()
+
+            # Fetch player data
+            player1_data = self.data[self.data["Name"] == player1_name]
+            player2_data = self.data[self.data["Name"] == player2_name]
+
+            if player1_data.empty or player2_data.empty:
+                print(f"Error: Data missing for {player1_name} or {player2_name}.")
+                return
+
+            # Stat groups
+            power_stats = ["HR", "R", "RBI", "SB"]
+            high_range_stats = ["PA"]
+            advanced_stats = ["WAR", "Def"]
+            percentage_stats = ["BB%", "K%"]
+
+            # Extract data for each group
+            player1_power = player1_data[power_stats].iloc[0].fillna(0).astype(float)
+            player2_power = player2_data[power_stats].iloc[0].fillna(0).astype(float)
+
+            player1_high_range = player1_data[high_range_stats].iloc[0].fillna(0).astype(float)
+            player2_high_range = player2_data[high_range_stats].iloc[0].fillna(0).astype(float)
+
+            player1_advanced = player1_data[advanced_stats].iloc[0].fillna(0).astype(float)
+            player2_advanced = player2_data[advanced_stats].iloc[0].fillna(0).astype(float)
+
+            player1_percentage = player1_data[percentage_stats].iloc[0].fillna(0).astype(float)
+            player2_percentage = player2_data[percentage_stats].iloc[0].fillna(0).astype(float)
+
+            # Clear the figure
+            self.figure.clear()
+
+            # Set figure size
+            self.figure.set_size_inches(12, 10)
+
+            # Create subplots
+            axes = self.figure.subplots(2, 2)
+
+            # Plot power stats
+            x = range(len(power_stats))
+            axes[0, 0].bar(x, player1_power, width=0.4, label=player1_name, color='blue')
+            axes[0, 0].bar([i + 0.4 for i in x], player2_power, width=0.4, label=player2_name, color='orange')
+            axes[0, 0].set_title("Power Stats")
+            axes[0, 0].set_xticks([i + 0.2 for i in x])
+            axes[0, 0].set_xticklabels(power_stats, rotation=30, ha='right')
+
+            # Plot high-range stats
+            x = range(len(high_range_stats))
+            axes[0, 1].bar(x, player1_high_range, width=0.4, label=player1_name, color='blue')
+            axes[0, 1].bar([i + 0.4 for i in x], player2_high_range, width=0.4, label=player2_name, color='orange')
+            axes[0, 1].set_title("High-Range Stats")
+            axes[0, 1].set_xticks([i + 0.2 for i in x])
+            axes[0, 1].set_xticklabels(high_range_stats, rotation=30, ha='right')
+
+            # Plot advanced stats
+            x = range(len(advanced_stats))
+            axes[1, 0].bar(x, player1_advanced, width=0.4, label=player1_name, color='blue')
+            axes[1, 0].bar([i + 0.4 for i in x], player2_advanced, width=0.4, label=player2_name, color='orange')
+            axes[1, 0].set_title("Advanced Stats")
+            axes[1, 0].set_xticks([i + 0.2 for i in x])
+            axes[1, 0].set_xticklabels(advanced_stats, rotation=30, ha='right')
+
+            # Plot percentage stats
+            x = range(len(percentage_stats))
+            axes[1, 1].bar(x, player1_percentage, width=0.4, label=player1_name, color='blue')
+            axes[1, 1].bar([i + 0.4 for i in x], player2_percentage, width=0.4, label=player2_name, color='orange')
+            axes[1, 1].set_title("Percentage Stats")
+            axes[1, 1].set_xticks([i + 0.2 for i in x])
+            axes[1, 1].set_xticklabels(percentage_stats, rotation=30, ha='right')
+
+            # Add a single legend for the entire figure
+            self.figure.legend(loc='upper right', fontsize=10)
+
+            # Adjust layout
+            self.figure.subplots_adjust(hspace=0.5, wspace=0.4)
+
+            # Refresh canvas
+            self.canvas.draw()
+
+        except Exception as e:
+            print(f"Error in update_bar_graph: {e}")
