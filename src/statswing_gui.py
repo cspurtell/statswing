@@ -32,9 +32,13 @@ class StatSwingApp(QMainWindow):
         self.player_dropdown.currentTextChanged.connect(self.update_player_table)
 
         #Season selection dropdowns
-
-
-
+        self.start_season_dropdown = QComboBox()
+        self.end_season_dropdown = QComboBox()
+        seasons = sorted(self.data['Season Year'].unique())
+        self.start_season_dropdown.addItems(map(str, seasons))
+        self.end_season_dropdown.addItems(map(str, seasons))
+        self.start_season_dropdown.currentTextChanged.connect(self.update_player_table)
+        self.end_season_dropdown.currentTextChanged.connect(self.update_player_table)
 
         self.player_stats_table = QTableWidget()
 
@@ -42,6 +46,10 @@ class StatSwingApp(QMainWindow):
         layout.addWidget(self.team_dropdown)
         layout.addWidget(QLabel('Select Player:'))
         layout.addWidget(self.player_dropdown)
+        layout.addWidget(QLabel('Start Season:'))
+        layout.addWidget(self.start_season_dropdown)
+        layout.addWidget(QLabel('End Season:'))
+        layout.addWidget(self.end_season_dropdown)
         layout.addWidget(self.player_stats_table)
 
         tab.setLayout(layout)
@@ -56,24 +64,53 @@ class StatSwingApp(QMainWindow):
         self.player_dropdown.clear()
         self.player_dropdown.addItems(filtered_data['Name'].unique())
 
-    def update_player_table(self):
+    def update_season_dropdowns(self):
         player_name = self.player_dropdown.currentText()
         if not player_name:
+            self.start_season_dropdown.clear()
+            self.end_season_dropdown.clear()
+            return
+
+        player_data = self.data[self.data['Name'] == player_name]
+        if player_data.empty:
+            self.start_season_dropdown.clear()
+            self.end_season_dropdown.clear()
+        
+        active_seasons = sorted(player_data['Season Year'].unique())
+        self.start_season_dropdown.clear()
+        self.end_season_dropdown.clear()
+        self.start_season_dropdown.addItems(map(str, active_seasons))
+        self.end_season_dropdown.addItems(map(str, active_seasons))
+
+    def update_player_table(self):
+        player_name = self.player_dropdown.currentText()
+        start_season = self.start_season_dropdown.currentText()
+        end_season = self.end_season_dropdown.currentText()
+        if not player_name or not start_season or not end_season:
             self.player_stats_table.clear()
             self.player_stats_table.setRowCount(0)
             self.player_stats_table.setColumnCount(0)
             self.player_stats_table.setHorizontalHeaderLabels([])
             return
         
-        player_data = self.data[self.data['Name'] == player_name]
-        if player_data.empty:
-            QMessageBox.warning(self, 'Error', f'No data found for player {player_name}')
+        filtered_data = self.data[
+            (self.data['Name'] == player_name) &
+            (self.data['Season Year'] >= int(start_season)) &
+            (self.data['Season Year'] <= int(end_season))
+        ]
+
+        if filtered_data.empty:
+            self.player_stats_table.clear()
+            self.player_stats_table.setRowCount(0)
+            self.player_stats_table.setColumnCount(0)
+            self.player_stats_table.setHorizontalHeaderLabels(['No Data Available'])
             return
         
-        player_row = player_data.iloc[0]
+        agg_data = filtered_data.sum(numeric_only = True)
+
         stats = [
-            (STAT_MAPPING.get(col, col), player_row[col])
-            for col in player_row.index
+            (STAT_MAPPING.get(col, col), agg_data[col])
+            for col in agg_data.index
             if col in STAT_MAPPING
         ]
         
@@ -84,7 +121,7 @@ class StatSwingApp(QMainWindow):
 
         for row, (stat_name, value)in enumerate(stats):
             self.player_stats_table.setItem(row, 0, QTableWidgetItem(stat_name))
-            self.player_stats_table.setItem(row, 1, QTableWidgetItem(str(value)))
+            self.player_stats_table.setItem(row, 1, QTableWidgetItem(f'{value:.2f}' if isinstance(value, float) else str(value)))
 
         self.player_stats_table.resizeColumnsToContents()
         self.player_stats_table.resizeRowsToContents()
