@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QComboBox, QTableWidget, QTableWidgetItem
 )
+from config import TEAM_NAME_MAPPING
 
 class StatSwingApp(QMainWindow):
     def __init__(self, data):
@@ -21,7 +22,8 @@ class StatSwingApp(QMainWindow):
 
         #Team selection dropdown
         self.team_dropdown = QComboBox()
-        self.team_dropdown.addItems(['All Teams'] + sorted(self.data['Team'].unique()))
+        team_names = ['All Teams'] + [TEAM_NAME_MAPPING.get(team, team) for team in sorted(self.data['Team'].unique())]
+        self.team_dropdown.addItems(team_names)
         self.team_dropdown.currentTextChanged.connect(self.update_player_dropdown)
 
         #Player selection dropdown
@@ -44,7 +46,8 @@ class StatSwingApp(QMainWindow):
         if team_name == 'All Teams':
             filtered_data = self.data
         else:
-            filtered_data = self.data[self.data['Team'] == team_name]
+            team_abbr = {v: k for k, v in TEAM_NAME_MAPPING.items()}.get(team_name, team_name)
+            filtered_data = self.data[self.data['Team'] == team_abbr]
         self.player_dropdown.clear()
         self.player_dropdown.addItems(filtered_data['Name'].unique())
     
@@ -56,42 +59,68 @@ class StatSwingApp(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout()
 
-        player1_layout = QHBoxLayout()
+        #Team dropdowns for P1 and P2
+        self.team1_dropdown = QComboBox()
+        self.team1_dropdown.addItems(['All Teams'] + [TEAM_NAME_MAPPING.get(team, team) for team in sorted(self.data['Team'].unique())])
+        self.team1_dropdown.currentTextChanged.connect(self.update_player1_dropdown)
+
+        self.team2_dropdown = QComboBox()
+        self.team2_dropdown.addItems(['All Teams'] + [TEAM_NAME_MAPPING.get(team, team) for team in sorted(self.data['Team'].unique())])
+        self.team2_dropdown.currentTextChanged.connect(self.update_player2_dropdown)
+
+        #Player dropdowns for P1 and P2
         self.player1_dropdown = QComboBox()
-        self.player1_dropdown.addItems(self.data['Name'].unique())
+        self.update_player1_dropdown('All Teams')
+        self.player1_dropdown.currentTextChanged.connect(self.update_comparison_table)
 
         self.player2_dropdown = QComboBox()
-        self.player2_dropdown.addItems(self.data['Name'].unique())
+        self.update_player2_dropdown('All Teams')
+        self.player2_dropdown.currentTextChanged.connect(self.update_comparison_table)
 
-        player1_layout.addWidget(QLabel('Player 1:'))
-        player1_layout.addWidget(self.player1_dropdown)
-        player1_layout.addWidget(QLabel('Player 2:'))
-        player1_layout.addWidget(self.player2_dropdown)
+        self.comparison_table = QTableWidget()
 
-        layout.addLayout(player1_layout)
+        layout.addWidget(QLabel('Team 1:'))
+        layout.addWidget(self.team1_dropdown)
+        layout.addWidget(QLabel('Player 1:'))
+        layout.addWidget(self.player1_dropdown)
 
-        self.player1_stats_table = QTableWidget()
-        self.player2_stats_table = QTableWidget()
+        layout.addWidget(QLabel('Team 2:'))
+        layout.addWidget(self.team2_dropdown)
+        layout.addWidget(QLabel('Player 2:'))
+        layout.addWidget(self.player2_dropdown)
 
-        layout.addWidget(QLabel('Player 1 Stats:'))
-        layout.addWidget(self.player1_stats_table)
-        layout.addWidget(QLabel('Player 2 Stats:'))
-        layout.addWidget(self.player2_stats_table)
-
-        self.player1_dropdown.currentTextChanged.connect(
-            lambda: self.update_player_stats_comp(self.player1_stats_table, self.player1_dropdown.currentText())
-        )
-        self.player2_dropdown.currentTextChanged.connect(
-            lambda: self.update_player_stats_comp(self.player2_stats_table, self.player2_dropdown.currentText())
-        )
-
+        layout.addWidget(self.comparison_table)
         tab.setLayout(layout)
         return tab
     
-    def update_player_stats_comp(self, table, player_name):
-        player_data = self.data[self.data['Name'] == player_name]
-        self.populate_table(table, player_data)
+    def update_player1_dropdown(self, team_name):
+        if team_name == 'All Teams':
+            filtered_data = self.data
+        else:
+            team_abbr = {v: k for k, v in TEAM_NAME_MAPPING.items()}.get(team_name, team_name)
+            filtered_data = self.data[self.data['Team'] == team_abbr]
+        self.player1_dropdown.clear()
+        self.player1_dropdown.addItems(filtered_data['Name'].unique())
 
+    def update_player2_dropdown(self, team_name):
+        if team_name == 'All Teams':
+            filtered_data = self.data
+        else:
+            team_abbr = {v: k for k, v in TEAM_NAME_MAPPING.items()}.get(team_name, team_name)
+            filtered_data = self.data[self.data['Team'] == team_abbr]
+        self.player2_dropdown.clear()
+        self.player2_dropdown.addItems(filtered_data['Name'].unique())
+
+    def update_comparison_table(self):
+        player1 = self.player1_dropdown.currentText()
+        player2 = self.player2_dropdown.currentText()
+
+        if player1 and player2:
+            player1_data = self.data[self.data['Name'] == player1]
+            player2_data = self.data[self.data['Name'] == player2]
+        
+        self.display_comparison(player1_data, player2_data)
+    
     def populate_table(self, table, player_data):
         table.clear()
         table.setColumnCount(len(player_data.columns))
@@ -100,3 +129,29 @@ class StatSwingApp(QMainWindow):
         for row_idx, row in player_data.iterrows():
             for col_idx, val in enumerate(row):
                 table.setItem(row_idx, col_idx, QTableWidgetItem(str(val)))
+
+    def display_comparison(self, player1_data, player2_data):
+        if player1_data.empty or player2_data.empty:
+            self.comparison_table.clear()
+            self.comparison_table.setRowCount(0)
+            self.comparison_table.setColumnCount(0)
+            self.comparison_table.setHorizontalHeaderLabels([])
+            return
+        
+        stats_columns = ['Stat 1', 'Stat 2', 'Stat 3', 'Stat 4'] #Need to fill this in with names for stats in data
+        player1_stats = player1_data.iloc[0][stats_columns]
+        player2_stats = player2_data.iloc[0][stats_columns]
+
+        self.comparison_table.clear()
+        self.comparison_table.setRowCount(len(stats_columns))
+        self.comparison_table.setColumnCount(3) #3 cols for stat name, player 1, and player 2
+        self.comparison_table.setHorizontalHeaderLabels(['Statistic', 'Player 1', 'Player 2'])
+
+        for row, stat in enumerate(stats_columns):
+            self.comparison_table.setItem(row, 0, QTableWidgetItem(stat)) #Statistic name
+            self.comparison_table.setItem(row, 1, QTableWidgetItem(str(player1_stats[stat])))
+            self.comparison_table.setItem(row, 2, QTableWidgetItem(str(player2_stats[stat])))
+        
+        self.comparison_table.resizeColumnsToContents()
+        self.comparison_table.resizeRowsToContents()
+    

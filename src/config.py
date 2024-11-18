@@ -1,5 +1,5 @@
 TEAM_NAME_MAPPING = {
-    'NYY': 'New York Yankees"',
+    'NYY': 'New York Yankees',
     'KCR': 'Kansas City Royals',
     'LAD': 'Los Angeles Dodgers',
     'BAL': 'Baltimore Orioles',
