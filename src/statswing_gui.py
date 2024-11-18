@@ -19,18 +19,34 @@ class StatSwingApp(QMainWindow):
         tab = QWidget()
         layout = QVBoxLayout()
 
+        #Team selection dropdown
+        self.team_dropdown = QComboBox()
+        self.team_dropdown.addItems(['All Teams'] + sorted(self.data['Team'].unique()))
+        self.team_dropdown.currentTextChanged.connect(self.update_player_dropdown)
+
+        #Player selection dropdown
         self.player_dropdown = QComboBox()
-        self.player_dropdown.addItems(self.data["Name"].unique())
+        self.update_player_dropdown('All Teams')
         self.player_dropdown.currentTextChanged.connect(self.update_player_stats)
 
         self.player_stats_table = QTableWidget()
 
+        layout.addWidget(QLabel('Select Team:'))
+        layout.addWidget(self.team_dropdown)
         layout.addWidget(QLabel('Select Player:'))
         layout.addWidget(self.player_dropdown)
         layout.addWidget(self.player_stats_table)
 
         tab.setLayout(layout)
         return tab
+    
+    def update_player_dropdown(self, team_name):
+        if team_name == 'All Teams':
+            filtered_data = self.data
+        else:
+            filtered_data = self.data[self.data['Team'] == team_name]
+        self.player_dropdown.clear()
+        self.player_dropdown.addItems(filtered_data['Name'].unique())
     
     def update_player_stats(self, player_name):
         player_data = self.data[self.data['Name'] == player_name]
