@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QLabel, QComboBox, QMessageBox, QTableWidget, QTableWidgetItem, QAbstractItemView
 )
 from qtrangeslider import QRangeSlider
-from config import TEAM_NAME_MAPPING, STAT_MAPPING
+from src.config import TEAM_NAME_MAPPING, STAT_MAPPING
 
 class StatSwingApp(QMainWindow):
     def __init__(self, data):
