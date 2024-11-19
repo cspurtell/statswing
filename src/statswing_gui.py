@@ -1,7 +1,8 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QHeaderView,
-    QLabel, QComboBox, QMessageBox, QTableWidget, QTableWidgetItem, QAbstractItemView
+    QLabel, QComboBox, QMessageBox, QTableWidget, QTableWidgetItem, QAbstractItemView,
+    QGridLayout, QSizePolicy
 )
 from src.config import TEAM_NAME_MAPPING, STAT_MAPPING
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -12,46 +13,126 @@ class StatSwingApp(QMainWindow):
         super().__init__()
         self.data = data
         self.setWindowTitle("StatSwing Test")
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(100, 100, 1000, 800)
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
 
         self.tabs.addTab(self.create_player_tab(), "Player Analytics")
         self.tabs.addTab(self.create_compare_tab(), "Compare Players")
-    
-    def create_player_tab(self):
+        self.tabs.addTab(self.create_career_tab(), "Career Stats")
+
+    def create_career_tab(self):
         tab = QWidget()
         layout = QVBoxLayout()
 
-        #Team selection dropdown
+        # Player selection dropdown
+        self.career_player_dropdown = QComboBox()
+        self.career_player_dropdown.addItems(self.data['Name'].unique())
+        self.career_player_dropdown.currentTextChanged.connect(self.update_career_table)
+
+        self.career_stats_table = QTableWidget()
+
+        # Add widgets to the layout
+        layout.addWidget(QLabel("Select Player:"))
+        layout.addWidget(self.career_player_dropdown)
+        layout.addWidget(self.career_stats_table)
+
+        tab.setLayout(layout)
+        return tab
+
+    def update_career_table(self, player_name):
+    # Filter the dataset for career stats (Season Year == 0)
+        player_career_data = self.data[
+            (self.data['Name'] == player_name) & (self.data['Season Year'] == 0)
+        ]
+
+        # Get the career average row
+        career_averages = self.data[self.data['Name'] == "Career Average"]
+
+        # Check if data exists for the selected player and career averages
+        if player_career_data.empty or career_averages.empty:
+            self.career_stats_table.clear()
+            self.career_stats_table.setRowCount(0)
+            self.career_stats_table.setColumnCount(0)
+            self.career_stats_table.setHorizontalHeaderLabels([])
+            return
+
+        # Extract player stats and career averages
+        player_stats = player_career_data.iloc[0]
+        career_averages = career_averages.iloc[0]
+
+        # Columns to display
+        stats_columns = ["G", "PA", "HR", "R", "RBI", "SB", "BB%", "K%", "AVG", "OBP", "SLG", "wOBA"]
+
+        # Prepare the data for display
+        stats_data = [
+            (stat, player_stats[stat], career_averages[stat])
+            for stat in stats_columns
+        ]
+
+        # Update the table
+        self.career_stats_table.clear()
+        self.career_stats_table.setRowCount(len(stats_columns))
+        self.career_stats_table.setColumnCount(3)  # Columns: Stat, Player Value, Career Avg
+        self.career_stats_table.setHorizontalHeaderLabels(["Statistic", "Player Value", "Career Avg"])
+
+        for row, (stat_name, player_value, league_value) in enumerate(stats_data):
+            self.career_stats_table.setItem(row, 0, QTableWidgetItem(stat_name))  # Statistic
+            self.career_stats_table.setItem(row, 1, QTableWidgetItem(f"{player_value:.2f}"))  # Player Value
+            self.career_stats_table.setItem(row, 2, QTableWidgetItem(f"{league_value:.2f}"))  # Career Avg
+
+        # Resize columns and rows for better readability
+        self.career_stats_table.resizeColumnsToContents()
+        self.career_stats_table.resizeRowsToContents()
+        self.career_stats_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.career_stats_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+    
+    def create_player_tab(self):
+        tab = QWidget()
+        layout = QGridLayout()
+
+        # Team selection dropdown
         self.team_dropdown = QComboBox()
+        self.team_dropdown.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         team_names = ['All Teams'] + [TEAM_NAME_MAPPING.get(team, team) for team in sorted(self.data['Team'].unique())]
         self.team_dropdown.addItems(team_names)
         self.team_dropdown.currentTextChanged.connect(self.update_player_dropdown)
 
-        #Player selection dropdown
+        # Player selection dropdown
         self.player_dropdown = QComboBox()
+        self.player_dropdown.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.update_player_dropdown('All Teams')
         self.player_dropdown.currentTextChanged.connect(self.update_player_table)
         self.player_dropdown.currentTextChanged.connect(self.update_season_dropdowns)
 
-        #Season selection dropdowns
+        # Season selection dropdowns
         self.start_season_dropdown = QComboBox()
+        self.start_season_dropdown.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.end_season_dropdown = QComboBox()
+        self.end_season_dropdown.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
         self.start_season_dropdown.currentTextChanged.connect(self.update_player_table)
         self.end_season_dropdown.currentTextChanged.connect(self.update_player_table)
 
         self.player_stats_table = QTableWidget()
+        self.player_stats_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        layout.addWidget(QLabel('Select Team:'))
-        layout.addWidget(self.team_dropdown)
-        layout.addWidget(QLabel('Select Player:'))
-        layout.addWidget(self.player_dropdown)
-        layout.addWidget(QLabel('Start Season:'))
-        layout.addWidget(self.start_season_dropdown)
-        layout.addWidget(QLabel('End Season:'))
-        layout.addWidget(self.end_season_dropdown)
-        layout.addWidget(self.player_stats_table)
+        # Add Matplotlib figure for diverging bar chart
+        self.figure_player = Figure()
+        self.canvas_player = FigureCanvas(self.figure_player)
+        self.canvas_player.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.canvas_player.setParent(tab)  # Explicitly set the parent to ensure proper embedding
+
+        # Add widgets to the grid layout
+        layout.addWidget(QLabel('Select Team:'), 0, 0)
+        layout.addWidget(self.team_dropdown, 0, 1)
+        layout.addWidget(QLabel('Select Player:'), 0, 2)
+        layout.addWidget(self.player_dropdown, 0, 3)
+        layout.addWidget(QLabel('Start Season:'), 1, 0)
+        layout.addWidget(self.start_season_dropdown, 1, 1)
+        layout.addWidget(QLabel('End Season:'), 1, 2)
+        layout.addWidget(self.end_season_dropdown, 1, 3)
+        layout.addWidget(self.player_stats_table, 2, 0, 1, 4)
+        layout.addWidget(self.canvas_player, 3, 0, 1, 4)
 
         tab.setLayout(layout)
         return tab
@@ -86,49 +167,106 @@ class StatSwingApp(QMainWindow):
 
     def update_player_table(self):
         player_name = self.player_dropdown.currentText()
-        start_season = self.start_season_dropdown.currentText()
-        end_season = self.end_season_dropdown.currentText()
-        if not player_name or not start_season or not end_season:
+        selected_season = self.start_season_dropdown.currentText()
+
+        if not player_name or not selected_season:
             self.player_stats_table.clear()
             self.player_stats_table.setRowCount(0)
             self.player_stats_table.setColumnCount(0)
             self.player_stats_table.setHorizontalHeaderLabels([])
             return
-        
-        filtered_data = self.data[
+
+        # Filter for player stats in the selected season
+        player_data = self.data[
             (self.data['Name'] == player_name) &
-            (self.data['Season Year'] >= int(start_season)) &
-            (self.data['Season Year'] <= int(end_season))
+            (self.data['Season Year'] == int(selected_season))
         ]
 
-        if filtered_data.empty:
+        # Filter for league averages in the selected season
+        league_avg_data = self.data[
+            (self.data['Name'] == f"Season {selected_season} Average")
+        ]
+
+        if player_data.empty or league_avg_data.empty:
             self.player_stats_table.clear()
             self.player_stats_table.setRowCount(0)
             self.player_stats_table.setColumnCount(0)
             self.player_stats_table.setHorizontalHeaderLabels(['No Data Available'])
             return
-        
-        agg_data = filtered_data.sum(numeric_only = True)
 
-        stats = [
-            (STAT_MAPPING.get(col, col), agg_data[col])
-            for col in agg_data.index
-            if col in STAT_MAPPING
+        # Extract stats for player and league averages
+        player_stats = player_data.iloc[0]
+        league_averages = league_avg_data.iloc[0]
+
+        # Columns to display
+        stats_columns = ["G", "PA", "HR", "R", "RBI", "SB", "BB%", "K%", "AVG", "OBP", "SLG", "wOBA"]
+
+        # Prepare the data for display
+        stats_data = [
+            (stat, player_stats[stat], league_averages[stat])
+            for stat in stats_columns
         ]
-        
+
+        # Update the table
         self.player_stats_table.clear()
-        self.player_stats_table.setRowCount(len(stats))
-        self.player_stats_table.setColumnCount(2) #Stat name and value
-        self.player_stats_table.setHorizontalHeaderLabels(['Statistic', 'Value'])
+        self.player_stats_table.setRowCount(len(stats_columns))
+        self.player_stats_table.setColumnCount(3)  # Columns: Stat, Player Value, Season Avg
+        self.player_stats_table.setHorizontalHeaderLabels(["Statistic", "Player Value", "Season Avg"])
 
-        for row, (stat_name, value)in enumerate(stats):
-            self.player_stats_table.setItem(row, 0, QTableWidgetItem(stat_name))
-            self.player_stats_table.setItem(row, 1, QTableWidgetItem(f'{value:.2f}' if isinstance(value, float) else str(value)))
+        for row, (stat_name, player_value, season_value) in enumerate(stats_data):
+            self.player_stats_table.setItem(row, 0, QTableWidgetItem(stat_name))  # Statistic
+            self.player_stats_table.setItem(row, 1, QTableWidgetItem(f"{player_value:.2f}"))  # Player Value
+            self.player_stats_table.setItem(row, 2, QTableWidgetItem(f"{season_value:.2f}"))  # Season Avg
 
+        # Resize columns and rows for better readability
         self.player_stats_table.resizeColumnsToContents()
         self.player_stats_table.resizeRowsToContents()
         self.player_stats_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.player_stats_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        # Update diverging bar chart for player vs. league average
+        self.update_player_chart(stats_data)
+
+    def update_player_chart(self, stats_data):
+        try:
+            # Clear the figure
+            self.figure_player.clear()
+
+            # Set figure size
+            self.figure_player.set_size_inches(10, len(stats_data) * 0.5)
+
+            # Create subplots for each stat with better alignment
+            axes = self.figure_player.subplots(len(stats_data), 1, squeeze=False)
+
+            for i, (stat_name, player_value, league_value) in enumerate(stats_data):
+                ax = axes[i, 0]
+                # Draw diverging bars for league average on the left and player stat on the right
+                ax.barh([0], [league_value], color='green' if league_value > player_value else 'red', height=0.3, label="League Avg")
+                ax.barh([0], [-player_value], color='green' if player_value > league_value else 'red', height=0.3, label="Player Stat")
+
+                # Set labels and limits for better alignment
+                ax.set_title(stat_name, fontsize=12, pad=20)
+                ax.set_yticks([])
+                ax.set_xticks([])
+                ax.set_xlim(left=-max(player_value, league_value) * 1.2, right=max(player_value, league_value) * 1.2)
+                ax.text(-player_value, 0, f'{player_value:.2f}', va='center', ha='left', fontsize=10, color='black')
+                ax.text(league_value, 0, f'{league_value:.2f}', va='center', ha='right', fontsize=10, color='black')
+
+                # Hide spines to make the bars stand out more
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+                ax.spines['left'].set_visible(False)
+                ax.spines['bottom'].set_visible(False)
+
+            # Adjust layout to prevent overlap and enhance readability
+            self.figure_player.tight_layout()
+
+            # Refresh canvas
+            self.canvas_player.draw()
+
+        except Exception as e:
+            print(f"Error in update_player_chart: {e}")
+
 
     def create_compare_tab(self):
         tab = QWidget()
@@ -155,6 +293,7 @@ class StatSwingApp(QMainWindow):
         # Initialize Matplotlib figure and canvas
         self.figure = Figure()
         self.canvas = FigureCanvas(self.figure)
+        self.canvas.setParent(tab)  # Explicitly set the parent to ensure proper embedding
 
         # Add widgets to the layout
         layout.addWidget(QLabel('Team 1:'))
