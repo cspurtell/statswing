@@ -51,7 +51,8 @@ STAT_MAPPING = {
     'BsR': 'Base Running',
     'Off': 'Offense',
     'Def': 'Defense',
-    'WAR': 'Wins Above Replacement'
+    'WAR': 'Wins Above Replacement',
+    'TotalStat': 'TotalStat'
 }
 
 STAT_DESCRIPTIONS = {

@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
     QGridLayout, QSizePolicy
 )
 from src.config import TEAM_NAME_MAPPING, STAT_MAPPING, STAT_DESCRIPTIONS
+from src.statswing_utils import get_dataset_column
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -107,7 +108,7 @@ class StatSwingApp(QMainWindow):
         self.end_season_dropdown.currentTextChanged.connect(self.update_player_table)
 
         self.player_stats_table = QTableWidget()
-        self.player_stats_table.itemDoubleClicked.connect(self.show_stat_description)
+        self.player_stats_table.itemDoubleClicked.connect(self.handle_double_click)
         #self.player_stats_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         #self.figure_player = Figure()
@@ -130,11 +131,57 @@ class StatSwingApp(QMainWindow):
         tab.setLayout(layout)
         return tab
     
-    def show_stat_description(self, item):
+    def handle_double_click(self, item):
         if item.column() == 0:
             stat_name = item.text()
             description = STAT_DESCRIPTIONS.get(stat_name, 'No description available')
             QMessageBox.information(self, f'About {stat_name}', description)
+        elif item.column() == 1:
+            stat_name = self.player_stats_table.item(item.row(), 0).text()
+            self.compare_to_average(stat_name)
+
+    def compare_to_average(self, stat_name):
+        stat_col = get_dataset_column(stat_name) #This is the problem right here for some reason, I'M GONNA DO IT
+        start_season = int(self.start_season_dropdown.currentText())
+        end_season = int(self.end_season_dropdown.currentText())
+        player_name = self.player_dropdown.currentText()
+        filtered_data = self.data[(self.data['Season Year'] >= start_season) & (self.data['Season Year'] <= end_season)]
+
+        grouped_data = (
+            filtered_data.groupby('Name')[stat_col]
+            .sum()
+            .reset_index()
+            .rename(columns = {stat_name: 'TotalStat'})
+        )
+
+        player_stat = grouped_data[grouped_data['Name'] == player_name]
+        player_val = player_stat['TotalStat'].iloc[0]
+        other_player_stats = grouped_data[grouped_data['Name'] != player_name]
+        other_player_avg = other_player_stats['TotalStat'].mean()
+        self.show_compare_chart(player_name, stat_name, player_val, other_player_avg, start_season, end_season)
+
+    def show_compare_chart(self, player_name, stat_name, player_val, other_player_avg, start_season, end_season):
+        fig = Figure(figsize = (6, 4))
+        ax = fig.add_subplot(111)
+
+        bars = ax.barh(
+            ['Other Players (Avg)', player_name],
+            [other_player_avg, player_val],
+            color = ['blue', 'green' if player_val >= other_player_avg else 'red']
+        )
+
+        ax.set_title(f'Total {stat_name} Comparison ({start_season}-{end_season})')
+        ax.set_ylabel(f'Total {stat_name}')
+        ax.bar_label(bars, fmt = '%.2f')
+
+        self.chart_window = QWidget()
+        self.chart_window.setWindowTitle(f'Stat Comparison')
+
+        canvas = FigureCanvas(fig)
+        layout = QVBoxLayout()
+        layout.addWidget(canvas)
+        self.chart_window.setLayout(layout)
+        self.chart_window.show()
     
     def update_player_dropdown(self, team_name):
         if team_name == 'All Teams':
