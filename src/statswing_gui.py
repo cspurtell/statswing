@@ -1,3 +1,4 @@
+import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QHeaderView,
@@ -152,6 +153,7 @@ class StatSwingApp(QMainWindow):
            return
        
        active_seasons = sorted(player_data['Season Year'].unique())
+       active_seasons = np.delete(active_seasons, 0)
        self.start_season_dropdown.clear()
        self.end_season_dropdown.clear()
        self.start_season_dropdown.addItems(map(str, active_seasons))
