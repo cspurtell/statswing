@@ -107,13 +107,12 @@ class StatSwingApp(QMainWindow):
         self.end_season_dropdown.currentTextChanged.connect(self.update_player_table)
 
         self.player_stats_table = QTableWidget()
-        self.player_stats_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        #self.player_stats_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        # Add Matplotlib figure for diverging bar chart
-        self.figure_player = Figure()
-        self.canvas_player = FigureCanvas(self.figure_player)
-        self.canvas_player.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.canvas_player.setParent(tab)  # Explicitly set the parent to ensure proper embedding
+        #self.figure_player = Figure()
+        #self.canvas_player = FigureCanvas(self.figure_player)
+        #self.canvas_player.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        #self.canvas_player.setParent(tab)  # Explicitly set the parent to ensure proper embedding
 
         # Add widgets to the grid layout
         layout.addWidget(QLabel('Select Team:'), 0, 0)
@@ -125,7 +124,7 @@ class StatSwingApp(QMainWindow):
         layout.addWidget(QLabel('End Season:'), 1, 2)
         layout.addWidget(self.end_season_dropdown, 1, 3)
         layout.addWidget(self.player_stats_table, 2, 0, 1, 4)
-        layout.addWidget(self.canvas_player, 3, 0, 1, 4)
+        #layout.addWidget(self.canvas_player, 3, 0, 1, 4)
 
         tab.setLayout(layout)
         return tab
@@ -161,65 +160,72 @@ class StatSwingApp(QMainWindow):
 
     def update_player_table(self):
         player_name = self.player_dropdown.currentText()
-        selected_season = self.start_season_dropdown.currentText()
+        start_season = self.start_season_dropdown.currentText()
+        end_season = self.end_season_dropdown.currentText()
 
-        if not player_name or not selected_season:
+        if not player_name or not start_season or not end_season:
             self.player_stats_table.clear()
             self.player_stats_table.setRowCount(0)
             self.player_stats_table.setColumnCount(0)
             self.player_stats_table.setHorizontalHeaderLabels([])
             return
 
-        # Filter for player stats in the selected season
-        player_data = self.data[
+        # Filter for player stats in the selected seasons
+        filtered_player_data = self.data[
             (self.data['Name'] == player_name) &
-            (self.data['Season Year'] == int(selected_season))
+            (self.data['Season Year'] >= int(start_season)) &
+            (self.data['Season Year'] <= int(end_season))
         ]
 
-        # Filter for league averages in the selected season
-        league_avg_data = self.data[
-            (self.data['Name'] == f"Season {selected_season} Average")
-        ]
+        # Filter for league averages in the selected seasons
+    #    league_avg_data = self.data[
+    #       (self.data['Name'] == f"Season {selected_season} Average")
+    #    ]
 
-        if player_data.empty or league_avg_data.empty:
+        if filtered_player_data.empty:
             self.player_stats_table.clear()
             self.player_stats_table.setRowCount(0)
             self.player_stats_table.setColumnCount(0)
             self.player_stats_table.setHorizontalHeaderLabels(['No Data Available'])
             return
+        
+        agg_data = filtered_player_data.sum(numeric_only = True)
 
         # Extract stats for player and league averages
-        player_stats = player_data.iloc[0]
-        league_averages = league_avg_data.iloc[0]
+        #player_stats = player_data.iloc[0]
+        #league_averages = league_avg_data.iloc[0]
 
         # Columns to display
-        stats_columns = ["G", "PA", "HR", "R", "RBI", "SB", "BB%", "K%", "AVG", "OBP", "SLG", "wOBA"]
+        #stats_columns = ["G", "PA", "HR", "R", "RBI", "SB", "BB%", "K%", "AVG", "OBP", "SLG", "wOBA"]
 
         # Prepare the data for display
-        stats_data = [
-            (stat, player_stats[stat], league_averages[stat])
-            for stat in stats_columns
+        #stats_data = [
+        #    (stat, player_stats[stat], league_averages[stat])
+        #    for stat in stats_columns
+        #]
+
+        stats = [
+            (STAT_MAPPING.get(col, col), agg_data[col])
+            for col in agg_data.index
+            if col in STAT_MAPPING
         ]
 
-        # Update the table
         self.player_stats_table.clear()
-        self.player_stats_table.setRowCount(len(stats_columns))
-        self.player_stats_table.setColumnCount(3)  # Columns: Stat, Player Value, Season Avg
-        self.player_stats_table.setHorizontalHeaderLabels(["Statistic", "Player Value", "Season Avg"])
+        self.player_stats_table.setRowCount(len(stats))
+        self.player_stats_table.setColumnCount(2)  # Columns: Stat, Player Value
+        self.player_stats_table.setHorizontalHeaderLabels(["Statistic", "Value"])
 
-        for row, (stat_name, player_value, season_value) in enumerate(stats_data):
+        for row, (stat_name, value) in enumerate(stats):
             self.player_stats_table.setItem(row, 0, QTableWidgetItem(stat_name))  # Statistic
-            self.player_stats_table.setItem(row, 1, QTableWidgetItem(f"{player_value:.2f}"))  # Player Value
-            self.player_stats_table.setItem(row, 2, QTableWidgetItem(f"{season_value:.2f}"))  # Season Avg
+            self.player_stats_table.setItem(row, 1, QTableWidgetItem(f'{value:.2f}' if isinstance(value, float) else str(value)))
 
-        # Resize columns and rows for better readability
         self.player_stats_table.resizeColumnsToContents()
         self.player_stats_table.resizeRowsToContents()
         self.player_stats_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.player_stats_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
         # Update diverging bar chart for player vs. league average
-        self.update_player_chart(stats_data)
+        #self.update_player_chart(stats_data)
 
     def update_player_chart(self, stats_data):
         try:
