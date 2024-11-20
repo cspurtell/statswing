@@ -107,6 +107,7 @@ class StatSwingApp(QMainWindow):
         self.end_season_dropdown.currentTextChanged.connect(self.update_player_table)
 
         self.player_stats_table = QTableWidget()
+        self.player_stats_table.itemDoubleClicked.connect(self.show_stat_description)
         #self.player_stats_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         #self.figure_player = Figure()
@@ -124,7 +125,7 @@ class StatSwingApp(QMainWindow):
         layout.addWidget(QLabel('End Season:'), 1, 2)
         layout.addWidget(self.end_season_dropdown, 1, 3)
         layout.addWidget(self.player_stats_table, 2, 0, 1, 4)
-        #layout.addWidget(self.canvas_player, 3, 0, 1, 4)
+        layout.addWidget(self.canvas_player, 3, 0, 1, 4)
 
         tab.setLayout(layout)
         return tab
