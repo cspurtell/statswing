@@ -229,13 +229,8 @@ class StatSwingApp(QMainWindow):
 
     def update_player_chart(self, stats_data):
         try:
-            # Clear the figure
             self.figure_player.clear()
-
-            # Set figure size
             self.figure_player.set_size_inches(10, len(stats_data) * 0.5)
-
-            # Create subplots for each stat with better alignment
             axes = self.figure_player.subplots(len(stats_data), 1, squeeze=False)
 
             for i, (stat_name, player_value, league_value) in enumerate(stats_data):
@@ -258,10 +253,7 @@ class StatSwingApp(QMainWindow):
                 ax.spines['left'].set_visible(False)
                 ax.spines['bottom'].set_visible(False)
 
-            # Adjust layout to prevent overlap and enhance readability
             self.figure_player.tight_layout()
-
-            # Refresh canvas
             self.canvas_player.draw()
 
         except Exception as e:
