@@ -32,7 +32,6 @@ class StatSwingApp(QMainWindow):
 
         self.career_stats_table = QTableWidget()
 
-        # Add widgets to the layout
         layout.addWidget(QLabel("Select Player:"))
         layout.addWidget(self.career_player_dropdown)
         layout.addWidget(self.career_stats_table)
