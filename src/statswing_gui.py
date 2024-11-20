@@ -198,19 +198,6 @@ class StatSwingApp(QMainWindow):
         
         agg_data = filtered_player_data.sum(numeric_only = True)
 
-        # Extract stats for player and league averages
-        #player_stats = player_data.iloc[0]
-        #league_averages = league_avg_data.iloc[0]
-
-        # Columns to display
-        #stats_columns = ["G", "PA", "HR", "R", "RBI", "SB", "BB%", "K%", "AVG", "OBP", "SLG", "wOBA"]
-
-        # Prepare the data for display
-        #stats_data = [
-        #    (stat, player_stats[stat], league_averages[stat])
-        #    for stat in stats_columns
-        #]
-
         stats = [
             (STAT_MAPPING.get(col, col), agg_data[col])
             for col in agg_data.index
