@@ -151,7 +151,7 @@ class StatSwingApp(QMainWindow):
             filtered_data.groupby('Name')[stat_col]
             .sum()
             .reset_index()
-            .rename(columns = {stat_name: 'TotalStat'})
+            .rename(columns = {stat_col: 'TotalStat'})
         )
 
         player_stat = grouped_data[grouped_data['Name'] == player_name]
