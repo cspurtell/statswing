@@ -45,10 +45,8 @@ class StatSwingApp(QMainWindow):
             (self.data['Name'] == player_name) & (self.data['Season Year'] == 0)
         ]
 
-        # Get the career average row
         career_averages = self.data[self.data['Name'] == "Career Average"]
 
-        # Check if data exists for the selected player and career averages
         if player_career_data.empty or career_averages.empty:
             self.career_stats_table.clear()
             self.career_stats_table.setRowCount(0)
@@ -56,14 +54,11 @@ class StatSwingApp(QMainWindow):
             self.career_stats_table.setHorizontalHeaderLabels([])
             return
 
-        # Extract player stats and career averages
         player_stats = player_career_data.iloc[0]
         career_averages = career_averages.iloc[0]
 
-        # Columns to display
         stats_columns = ["G", "PA", "HR", "R", "RBI", "SB", "BB%", "K%", "AVG", "OBP", "SLG", "wOBA"]
 
-        # Prepare the data for display
         stats_data = [
             (stat, player_stats[stat], career_averages[stat])
             for stat in stats_columns
