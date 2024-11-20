@@ -69,7 +69,6 @@ class StatSwingApp(QMainWindow):
             for stat in stats_columns
         ]
 
-        # Update the table
         self.career_stats_table.clear()
         self.career_stats_table.setRowCount(len(stats_columns))
         self.career_stats_table.setColumnCount(3)  # Columns: Stat, Player Value, Career Avg
@@ -80,7 +79,6 @@ class StatSwingApp(QMainWindow):
             self.career_stats_table.setItem(row, 1, QTableWidgetItem(f"{player_value:.2f}"))  # Player Value
             self.career_stats_table.setItem(row, 2, QTableWidgetItem(f"{league_value:.2f}"))  # Career Avg
 
-        # Resize columns and rows for better readability
         self.career_stats_table.resizeColumnsToContents()
         self.career_stats_table.resizeRowsToContents()
         self.career_stats_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
