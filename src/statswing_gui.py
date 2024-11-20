@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QLabel, QComboBox, QMessageBox, QTableWidget, QTableWidgetItem, QAbstractItemView,
     QGridLayout, QSizePolicy
 )
-from src.config import TEAM_NAME_MAPPING, STAT_MAPPING
+from src.config import TEAM_NAME_MAPPING, STAT_MAPPING, STAT_DESCRIPTIONS
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -125,10 +125,16 @@ class StatSwingApp(QMainWindow):
         layout.addWidget(QLabel('End Season:'), 1, 2)
         layout.addWidget(self.end_season_dropdown, 1, 3)
         layout.addWidget(self.player_stats_table, 2, 0, 1, 4)
-        layout.addWidget(self.canvas_player, 3, 0, 1, 4)
+        #layout.addWidget(self.canvas_player, 3, 0, 1, 4)
 
         tab.setLayout(layout)
         return tab
+    
+    def show_stat_description(self, item):
+        if item.column() == 0:
+            stat_name = item.text()
+            description = STAT_DESCRIPTIONS.get(stat_name, 'No description available')
+            QMessageBox.information(self, f'About {stat_name}', description)
     
     def update_player_dropdown(self, team_name):
         if team_name == 'All Teams':
