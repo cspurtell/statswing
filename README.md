@@ -2,7 +2,7 @@
 
 ## Description:
 
-In today’s data-driven sports landscape, statistical insights have emerged as the primary means for both professional analysts and fans to deepen their understanding of player performance. Nowhere is this more true than in baseball, where nearly every action taken by hitters and fielders during a game is quantified and tracked by some metric
+In today’s data-driven sports landscape, statistical insights have emerged as the primary means for both professional analysts and fans to deepen their understanding of player performance. Nowhere is this more true than in baseball, where nearly every action taken by hitters and fielders during a game is quantified and tracked by some metric.
 
 The goal of this project repository is to develop an interactive interface that enables users to explore and compare baseball players' hitting statistics with a high level of detail and flexibility. The interface will utilize our in-depth dataset to allow users not only to compare players' core hitting metrics against each other, but also to dive into specific situational stats—such as performance against individual pitchers, at particular stadiums, or under unique game conditions. In addition to situational breakdowns, the platform will include options for observing a players' performance trend over time, giving users insight into how a player’s abilities have evolved across seasons, in different contexts, and during critical moments.
 
