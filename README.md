@@ -23,3 +23,5 @@ To run the current prototype application, navigate to the `statswing` project di
 `config.py`: File containing a series of dictionaries used by the GUI-related functions in `statswing_gui.py` and `statswing_utils.py`
 
 `statswing_gui.py`: File containing all PyQt5 code relating to the StatSwing GUI, including loading/cleaning/filtering data, formatting components, and implementing interactivity
+
+`statswing_utils.py`: File containing supplementary functions used in `statswing_gui.py`, some of which aren't used anymore but I left them in anyway because why not
