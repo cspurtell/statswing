@@ -227,6 +227,11 @@ class StatSwingApp(QMainWindow):
        self.end_season_dropdown.addItems(map(str, active_seasons))
 
     def update_player_table(self) -> None:
+        '''
+        
+        Updates the information displayed in the player table based on dropdown menu values
+        
+        '''
         player_name = self.player_dropdown.currentText()
         start_season = self.start_season_dropdown.currentText()
         end_season = self.end_season_dropdown.currentText()
@@ -360,6 +365,11 @@ class StatSwingApp(QMainWindow):
         return tab
     
     def update_player1_dropdown(self, team_name: str) -> None:
+        '''
+        
+        Updates the dropdown menu for Player 1 based on the selected team
+        
+        '''
         if team_name == 'All Teams':
             filtered_data = self.data
         else:
@@ -369,6 +379,11 @@ class StatSwingApp(QMainWindow):
         self.player1_dropdown.addItems(filtered_data['Name'].unique())
 
     def update_player2_dropdown(self, team_name: str) -> None:
+        '''
+        
+        Updates the dropdown menu for Player 2 based on the selected team
+
+        '''
         if team_name == 'All Teams':
             filtered_data = self.data
         else:
@@ -378,6 +393,11 @@ class StatSwingApp(QMainWindow):
         self.player2_dropdown.addItems(filtered_data['Name'].unique())
 
     def update_comparison_table(self) -> None:
+        '''
+        
+        Updates the displayed information in the comparison table based on the selected players
+
+        '''
         player1 = self.player1_dropdown.currentText()
         player2 = self.player2_dropdown.currentText()
 
@@ -387,6 +407,11 @@ class StatSwingApp(QMainWindow):
         self.display_comparison(player1_data, player2_data)
 
     def display_comparison(self, player1_data: pd.DataFrame, player2_data: pd.DataFrame) -> None:
+        '''
+        
+        Helper function for above
+        
+        '''
         if player1_data.empty or player2_data.empty:
             self.comparison_table.clear()
             self.comparison_table.setRowCount(0)
@@ -413,6 +438,12 @@ class StatSwingApp(QMainWindow):
 
 
     def update_bar_graph(self) -> None:
+        '''
+        
+        Updates the various visualizations present in the compare tab based on selected values
+        
+        
+        '''
         try:
             # Get selected players
             player1_name = self.player1_dropdown.currentText()
