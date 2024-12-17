@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QMainWindow, QTabWidget, QWidget, QVBoxLayout, QHBoxLayout, QHeaderView,
@@ -23,7 +24,7 @@ class StatSwingApp(QMainWindow):
         self.tabs.addTab(self.create_compare_tab(), "Compare Players")
         self.tabs.addTab(self.create_career_tab(), "Career Stats")
 
-    def create_career_tab(self):
+    def create_career_tab(self) -> QWidget:
         tab = QWidget()
         layout = QVBoxLayout()
 
@@ -41,7 +42,7 @@ class StatSwingApp(QMainWindow):
         tab.setLayout(layout)
         return tab
 
-    def update_career_table(self, player_name):
+    def update_career_table(self, player_name: str) -> None:
     # Filter the dataset for career stats (Season Year == 0)
         player_career_data = self.data[
             (self.data['Name'] == player_name) & (self.data['Season Year'] == 0)
@@ -81,7 +82,7 @@ class StatSwingApp(QMainWindow):
         self.career_stats_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.career_stats_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
     
-    def create_player_tab(self):
+    def create_player_tab(self) -> QWidget:
         tab = QWidget()
         layout = QGridLayout()
 
@@ -131,7 +132,7 @@ class StatSwingApp(QMainWindow):
         tab.setLayout(layout)
         return tab
     
-    def handle_double_click(self, item):
+    def handle_double_click(self, item: QTableWidgetItem) -> None:
         if item.column() == 0:
             stat_name = item.text()
             description = STAT_DESCRIPTIONS.get(stat_name, 'No description available')
@@ -140,8 +141,8 @@ class StatSwingApp(QMainWindow):
             stat_name = self.player_stats_table.item(item.row(), 0).text()
             self.compare_to_average(stat_name)
 
-    def compare_to_average(self, stat_name):
-        stat_col = get_dataset_column(stat_name) #This is the problem right here for some reason, I'M GONNA DO IT
+    def compare_to_average(self, stat_name: str) -> None:
+        stat_col = get_dataset_column(stat_name)
         start_season = int(self.start_season_dropdown.currentText())
         end_season = int(self.end_season_dropdown.currentText())
         player_name = self.player_dropdown.currentText()
@@ -160,7 +161,7 @@ class StatSwingApp(QMainWindow):
         other_player_avg = other_player_stats['TotalStat'].mean()
         self.show_compare_chart(player_name, stat_name, player_val, other_player_avg, start_season, end_season)
 
-    def show_compare_chart(self, player_name, stat_name, player_val, other_player_avg, start_season, end_season):
+    def show_compare_chart(self, player_name: str, stat_name: str, player_val: float, other_player_avg: float, start_season: int, end_season: int) -> None:
         fig = Figure(figsize = (6, 4))
         ax = fig.add_subplot(111)
 
@@ -183,7 +184,7 @@ class StatSwingApp(QMainWindow):
         self.chart_window.setLayout(layout)
         self.chart_window.show()
     
-    def update_player_dropdown(self, team_name):
+    def update_player_dropdown(self, team_name: str) -> None:
         if team_name == 'All Teams':
             filtered_data = self.data
         else:
@@ -192,7 +193,7 @@ class StatSwingApp(QMainWindow):
         self.player_dropdown.clear()
         self.player_dropdown.addItems(filtered_data['Name'].unique())
 
-    def update_season_dropdowns(self):
+    def update_season_dropdowns(self) -> None:
        player_name = self.player_dropdown.currentText()
        if not player_name:
            self.start_season_dropdown.clear()
@@ -212,7 +213,7 @@ class StatSwingApp(QMainWindow):
        self.start_season_dropdown.addItems(map(str, active_seasons))
        self.end_season_dropdown.addItems(map(str, active_seasons))
 
-    def update_player_table(self):
+    def update_player_table(self) -> None:
         player_name = self.player_dropdown.currentText()
         start_season = self.start_season_dropdown.currentText()
         end_season = self.end_season_dropdown.currentText()
@@ -268,7 +269,7 @@ class StatSwingApp(QMainWindow):
         # Update diverging bar chart for player vs. league average
         #self.update_player_chart(stats_data)
 
-    def update_player_chart(self, stats_data):
+    def update_player_chart(self, stats_data: pd.DataFrame) -> None:
         try:
             self.figure_player.clear()
             self.figure_player.set_size_inches(10, len(stats_data) * 0.5)
@@ -301,7 +302,7 @@ class StatSwingApp(QMainWindow):
             print(f"Error in update_player_chart: {e}")
 
 
-    def create_compare_tab(self):
+    def create_compare_tab(self) -> QWidget:
         tab = QWidget()
         layout = QVBoxLayout()
 
@@ -345,7 +346,7 @@ class StatSwingApp(QMainWindow):
         tab.setLayout(layout)
         return tab
     
-    def update_player1_dropdown(self, team_name):
+    def update_player1_dropdown(self, team_name: str) -> None:
         if team_name == 'All Teams':
             filtered_data = self.data
         else:
@@ -354,7 +355,7 @@ class StatSwingApp(QMainWindow):
         self.player1_dropdown.clear()
         self.player1_dropdown.addItems(filtered_data['Name'].unique())
 
-    def update_player2_dropdown(self, team_name):
+    def update_player2_dropdown(self, team_name: str) -> None:
         if team_name == 'All Teams':
             filtered_data = self.data
         else:
@@ -363,7 +364,7 @@ class StatSwingApp(QMainWindow):
         self.player2_dropdown.clear()
         self.player2_dropdown.addItems(filtered_data['Name'].unique())
 
-    def update_comparison_table(self):
+    def update_comparison_table(self) -> None:
         player1 = self.player1_dropdown.currentText()
         player2 = self.player2_dropdown.currentText()
 
@@ -372,7 +373,7 @@ class StatSwingApp(QMainWindow):
         
         self.display_comparison(player1_data, player2_data)
 
-    def display_comparison(self, player1_data, player2_data):
+    def display_comparison(self, player1_data: pd.DataFrame, player2_data: pd.DataFrame) -> None:
         if player1_data.empty or player2_data.empty:
             self.comparison_table.clear()
             self.comparison_table.setRowCount(0)
@@ -398,7 +399,7 @@ class StatSwingApp(QMainWindow):
         self.comparison_table.resizeRowsToContents()
 
 
-    def update_bar_graph(self):
+    def update_bar_graph(self) -> None:
         try:
             # Get selected players
             player1_name = self.player1_dropdown.currentText()
