@@ -43,6 +43,8 @@ class StatSwingApp(QMainWindow):
         return tab
 
     def update_career_table(self, player_name: str) -> None:
+
+
     # Filter the dataset for career stats (Season Year == 0)
         player_career_data = self.data[
             (self.data['Name'] == player_name) & (self.data['Season Year'] == 0)
@@ -185,6 +187,11 @@ class StatSwingApp(QMainWindow):
         self.chart_window.show()
     
     def update_player_dropdown(self, team_name: str) -> None:
+        '''
+        
+        Updates the player dropdown menu based on the selected team
+        
+        '''
         if team_name == 'All Teams':
             filtered_data = self.data
         else:
@@ -194,6 +201,12 @@ class StatSwingApp(QMainWindow):
         self.player_dropdown.addItems(filtered_data['Name'].unique())
 
     def update_season_dropdowns(self) -> None:
+       '''
+       
+       Updates the start and end season dropdown menus based on the selected player
+       
+       
+       '''
        player_name = self.player_dropdown.currentText()
        if not player_name:
            self.start_season_dropdown.clear()
