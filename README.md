@@ -8,7 +8,7 @@ The goal of this project repository is to develop an interactive interface that 
 
 # Data Retrieval
 
-Proposal Link: https://docs.google.com/document/d/1-FgHjzoIlp2tr4nq0ZzZZCuM64M7s6rnJ7g4rBsGdQI/edit?tab=t.0
+Proposal Link: https://docs.google.com/document/d/1fdG-fuZCQ_g55ULebkMyVMPFFz5UdmXfA2yxurq6g88/edit?tab=t.0
 
 ## Getting Started
 
